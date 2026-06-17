@@ -1,4 +1,3 @@
-#include <esp_task_wdt.h>
 #include <HardwareSerial.h>
 
 /*Lidar(TSD10)のピン設定*/
