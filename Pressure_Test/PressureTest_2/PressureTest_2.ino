@@ -79,6 +79,8 @@ int get_trend(float base) {
   Serial.println(slope_p.b);
 
   // 近似直線との残差を求め、残差の標準偏差も求める
+  float p_residuals[data_amount];         // 近似直線との残差
+  float sd_res;                           // 残差の標準偏差
   
   Serial.print("p_res: ");
   for (int i=0; i<data_amount; i++) {
