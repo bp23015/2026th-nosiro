@@ -9,7 +9,6 @@ int TXD2 = 17;    // TDS10側のRX, 右端
 QueueHandle_t xLidarQueue;
 
 int Current_Distance_L = 1;
-volatile unsigned long byte_rx_counter = 0;
 
 /* Lidarで目的地までの距離を取得する */
 bool get_dist(int *out_distance) {
@@ -43,7 +42,6 @@ void vLidarTask(void *pvParameters) {
     int dist;
 
     while (Serial2.available() >= 4) {
-      // byte_rx_counter++;
       // 正常に取得できた最新値のみを上書き
       if (get_dist(&dist)) {
         xQueueOverwrite(xLidarQueue, &dist);
