@@ -64,10 +64,11 @@ void setup() {
   Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
 
   MyGPS.begin(9600, SERIAL_8N1, 26, 27);
+
+  Set_Calibration();  // bnoのキャリブレーション
 }
 
 void loop() {
-  Set_Calibration();
   while (Target_Distance <= 2.0) {
     while (MyGPS.available() > 0) {
       if (gps.encode(MyGPS.read())) {
