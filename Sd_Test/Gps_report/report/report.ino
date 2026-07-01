@@ -8,7 +8,7 @@
 Ticker bno055ticker;       //タイマー割り込み用のインスタンス
 #define BNO055interval 10  //何ms間隔でデータを取得するか
 
-const char* fname = "/report_20260624.csv";
+const char* fname = "/report_20260630_1.csv";
 File file;
 //Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire); //ICSの名前, デフォルトアドレス, 謎
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -18,8 +18,8 @@ TinyGPSPlus gps;
 HardwareSerial MyGPS(1);
 
 
-double Target_lat = 35.9503224;   //目的地の緯度
-double Target_lon = 139.6537299;  //目的地の経度
+double Target_lat = 35.9500610;   //目的地の緯度
+double Target_lon = 139.6537761;  //目的地の経度
 double Current_lat;               //現在の緯度
 double Current_lon;               //現在の経度
 double Current_Yaw;               //現在の方位角
@@ -85,13 +85,6 @@ void loop() {
     // ==========================================
     while (MyGPS.available() > 0) {
       if (gps.encode(MyGPS.read())) {
-        // モーターを直進させる処理
-        digitalWrite(RM_IN1, HIGH);
-        digitalWrite(RM_IN2, LOW);
-        digitalWrite(LM_IN1, HIGH);
-        digitalWrite(LM_IN2, LOW);
-        
-        
         if (gps.satellites.isUpdated()) {
           Serial.print("[GPS状態] 受信衛星数: ");
           Serial.print(gps.satellites.value());
@@ -101,6 +94,12 @@ void loop() {
 
         // 完全なGPSデータが受信でき、かつ測位が完了した時だけ中に入る
         if (gps.location.isUpdated() && gps.location.isValid()) {
+          // モーターを直進させる処理
+          digitalWrite(RM_IN1, LOW);
+          digitalWrite(RM_IN2, HIGH);
+          digitalWrite(LM_IN1, LOW);
+          digitalWrite(LM_IN2, HIGH);
+
           count++;
           Current_lat = gps.location.lat();
           Current_lon = gps.location.lng();
