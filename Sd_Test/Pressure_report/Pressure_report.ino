@@ -5,7 +5,7 @@
 #include <math.h>
 Adafruit_BME280 bme;
 
-const char* fname = "/pressure_report_20260630.txt";
+const char* fname = "/pressure_report_baseupd_20260701.csv";
 File file;
 
 float append_datas[14]; //0~9: 気圧, 10: 傾き, 11: 上昇速度, 12: 判定, 13: number
@@ -16,7 +16,7 @@ const int data_amount = 10;           // データ取得量
 const int sensor_dist = 50;           // センサの取得間隔[ms]
 const float press2height = -10/1.2;   // 気圧から高度に変換する比率
 
-const float base = 0.5;               // 暫定の比較基準[m/s]
+const float base = 1.0;               // 暫定の比較基準[m/s]
 
 struct Slope{
   float a;      // 近似直線の傾き
@@ -145,7 +145,7 @@ int get_trend(float base) {
   Serial.print(", ");
   Serial.println(slope_fixed.b);
 
-  float speed = slope_fixed.a * press2height / (sensor_dist * 1000);  // 上昇速度[m/s]を傾きから求める
+  float speed = slope_fixed.a * press2height / (sensor_dist / 1000.0);  // 上昇速度[m/s]を傾きから求める
   Serial.print("speed: ");
   Serial.println(speed);
   append_datas[10] = slope_fixed.a;
