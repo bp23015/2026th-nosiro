@@ -126,7 +126,7 @@ int get_trend(float base) {
   Serial.print(", ");
   Serial.println(slope_fixed.b);
 
-  float speed = slope_fixed.a * press2height / (sensor_dist * 1000);  // 上昇速度[m/s]を傾きから求める
+  float speed = slope_fixed.a * press2height / (sensor_dist / 1000.0);  // 上昇速度[m/s]を傾きから求める
 
   // 傾きの絶対値と閾値baseの差、傾きの正負の2つを求め、上昇なら1、安定なら0、下降なら-1を返す
   if (abs(speed) < base)  return  0;  // 安定
