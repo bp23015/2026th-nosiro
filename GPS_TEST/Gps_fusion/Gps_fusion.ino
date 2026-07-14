@@ -14,7 +14,6 @@ TinyGPSPlus gps;
 // GPS用にSerial1、またはSerial2のピンをずらして定義
 HardwareSerial MyGPS(1);
 
-
 double Target_lat;            //目的地の緯度
 double Target_lon;            //目的地の経度
 double Current_lat;           //現在の緯度
@@ -23,7 +22,7 @@ double Current_Yaw;           //現在の方位角
 double Target_Yaw;            //目的地までの方位
 double Target_Distance = 50;  //目的地までの距離(m)
 double Yaw_Error;             //方位の差
-double base=20;
+double base = 20;
 
 /*モータドライバー(TB6643kq)のピン設定*/
 int RM_IN1 = 13;  //右のモータードライバー
@@ -69,7 +68,7 @@ void setup() {
 }
 
 void loop() {
-  while (Target_Distance <= 2.0) {
+  while (Target_Distance >= 2.0) {
     while (MyGPS.available() > 0) {
       if (gps.encode(MyGPS.read())) {
         GetData();
@@ -100,9 +99,9 @@ void Calc_Dist() {
 double Calc_Error(double Target_Yaw, double Current_Yaw) {
   Yaw_Error = Target_Yaw - Current_Yaw;  //目的地-現在の方位
   if (Yaw_Error > 180) {
-    Yaw_Error - 360;
+    Yaw_Error -= 360;
   } else if (Yaw_Error < -180) {
-    Yaw_Error + 360;
+    Yaw_Error += 360;
   }
   return Yaw_Error;
 }
@@ -116,31 +115,46 @@ bool Mode_Select(double Yaw_Error) {
 }
 
 void Pivot(double Yaw_Error) {
-  while (Yaw_Error <= 10) {
-    if (Yaw_Error <= 0) {
-      digitalWrite(LM_IN1, HIGH);
-      digitalWrite(LM_IN2, LOW);
-      delay(100);
-    } else {
-      digitalWrite(RM_IN1, HIGH);
-      digitalWrite(RM_IN2, LOW);
-      delay(100);
-    }
+  if (Yaw_Error <= 0) {
+    digitalWrite(LM_IN1, HIGH);
+    digitalWrite(LM_IN2, LOW);
+    digitalWrite(RM_IN1, LOW);
+    digitalWrite(RM_IN2, HIGH);
+  } else {
+    digitalWrite(LM_IN1, LOW);
+    digitalWrite(LM_IN2, HIGH);
+    digitalWrite(RM_IN1, HIGH);
+    digitalWrite(RM_IN2, LOW);
   }
 }
 
 void Pid(double Yaw_Error) {
+  // 比例ゲイン(P制御)
+  int pwm_val = abs(Yaw_Error) * 10;     // 数値は実際の動きを見て調整
+  pwm_val = constrain(pwm_val, 0, 100);  // PWM上限を超えないよう制限
+
+  // 基準速度（前進ベース）
+  int base_speed = 150;
+  int right_speed = base_speed;
+  int left_speed = base_speed;
+
+  // 誤差に応じた速度差分を計算
   if (Yaw_Error > 0) {
-    analogWrite(RM_IN1, 60 * Yaw_Error);
-    analogWrite(RM_IN2, 0);
+    right_speed -= pwm_val;  // 右を遅くして右へ曲がる
+    left_speed += pwm_val;
   } else {
-    analogWrite(LM_IN1, 60 * Yaw_Error);
-    analogWrite(LM_IN2, 0);
+    right_speed += pwm_val;
+    left_speed -= pwm_val;  // 左を遅くして左へ曲がる
   }
-  digitalWrite(RM_IN1, HIGH);
-  digitalWrite(RM_IN2, LOW);
-  digitalWrite(LM_IN1, HIGH);
-  digitalWrite(LM_IN2, LOW);
+
+  // 最終的なPWM値の制約
+  right_speed = constrain(right_speed, 0, 255);
+  left_speed = constrain(left_speed, 0, 255);
+
+  analogWrite(RM_IN1, right_speed);
+  analogWrite(RM_IN2, 0);
+  analogWrite(LM_IN1, left_speed);
+  analogWrite(LM_IN2, 0);
 }
 
 void Display(double something) {
