@@ -18,14 +18,14 @@ TinyGPSPlus gps;
 HardwareSerial MyGPS(1);
 
 
-double Target_lat = 35.9503224;   //目的地の緯度
-double Target_lon = 139.6537299;  //目的地の経度
-double Current_lat;               //現在の緯度
-double Current_lon;               //現在の経度
-double Current_Yaw;               //現在の方位角
-double Target_Yaw;                //目的地までの方位
-double Target_Distance = 50;      //目的地までの距離(m)
-double Yaw_Error;                 //方位の差
+double Target_lat = 35.9499855;    //目的地の緯度
+double Target_lon = 139.65372726;  //目的地の経度
+double Current_lat;                //現在の緯度
+double Current_lon;                //現在の経度
+double Current_Yaw;                //現在の方位角
+double Target_Yaw;                 //目的地までの方位
+double Target_Distance = 50;       //目的地までの距離(m)
+double Yaw_Error;                  //方位の差
 double base = 20;
 int count = 0;  //GPS取得回数
 
@@ -78,7 +78,6 @@ void setup() {
 void loop() {
   // 修正箇所
   static unsigned long lastSensorTime = 0;
-  static unsigned long lastSensorTime = 0;
 
   while (Target_Distance >= 5.0) {
     // ==========================================
@@ -91,8 +90,8 @@ void loop() {
         digitalWrite(RM_IN2, LOW);
         digitalWrite(LM_IN1, HIGH);
         digitalWrite(LM_IN2, LOW);
-        
-        
+
+
         if (gps.satellites.isUpdated()) {
           Serial.print("[GPS状態] 受信衛星数: ");
           Serial.print(gps.satellites.value());
@@ -105,7 +104,6 @@ void loop() {
           count++;
           Current_lat = gps.location.lat();
           Current_lon = gps.location.lng();
-
 
           Serial.println("→ 測位成功:SDカードに書き込みます。");
           Calc_Dist();  // 目的地までの距離と方位を更新
@@ -143,16 +141,13 @@ void SD_Write() {
     return;
   }
   file.print("number,");
-  file.print("number,");
   file.print("latitude,");
   file.print("longitude,");
-  file.println("explain");
   file.println("explain");
   file.close();
   delay(10);
 }
 
-void SD_Append(double lat, double lon, String number, String explain) {
 void SD_Append(double lat, double lon, String number, String explain) {
   char charbuf[15];
   char charbuf2[15];
@@ -166,10 +161,8 @@ void SD_Append(double lat, double lon, String number, String explain) {
     return;
   }
   file.print(number + ",");
-  file.print(number + ",");
   file.print(latstr + ",");
   file.print(lonstr + ",");
-  file.println(explain);
   file.println(explain);
   file.close();
   delay(10);
@@ -208,24 +201,19 @@ bool Mode_Select(double Yaw_Error) {
 
 void Pivot(double Yaw_Error) {
   char buffer[100];
-  char buffer[100];
   if (Yaw_Error <= 10) {
     if (Yaw_Error <= 0) {
       digitalWrite(LM_IN1, HIGH);
       digitalWrite(LM_IN2, LOW);
-      sprintf(buffer, "目的地との方位差 %lf 度 : 右に0.1秒回転します", Yaw_Error);
       sprintf(buffer, "目的地との方位差 %lf 度 : 右に0.1秒回転します", Yaw_Error);
       delay(100);
     } else {
       digitalWrite(RM_IN1, HIGH);
       digitalWrite(RM_IN2, LOW);
       sprintf(buffer, "目的地との方位差 %lf 度 : 左に0.1秒回転します", Yaw_Error);
-      sprintf(buffer, "目的地との方位差 %lf 度 : 左に0.1秒回転します", Yaw_Error);
       delay(100);
     }
   }
-  String explain = String(buffer);
-  SD_Append(Current_lat, Current_lon, (String)count, (String)explain);
   String explain = String(buffer);
   SD_Append(Current_lat, Current_lon, (String)count, (String)explain);
 }
@@ -233,20 +221,13 @@ void Pivot(double Yaw_Error) {
 void Pid(double Yaw_Error) {
   char buffer[100];
   double temp = (60 * Yaw_Error) / 50;
-  char buffer[100];
-  double temp = (60 * Yaw_Error) / 50;
   if (Yaw_Error > 0) {
     analogWrite(RM_IN1, 60 * Yaw_Error);
     analogWrite(RM_IN2, 0);
     sprintf(buffer, "目的地との方位差 %lf : 右モータを%lf回転します", Yaw_Error, temp);
-    sprintf(buffer, "目的地との方位差 %lf : 右モータを%lf回転します", Yaw_Error, temp);
   } else {
     analogWrite(LM_IN1, 60 * Yaw_Error);
     analogWrite(LM_IN2, 0);
-    sprintf(buffer, "目的地との方位差 %lf : 左モータを%lf回転します", Yaw_Error, temp);
-  }
-  String explain = String(buffer);
-  SD_Append(Current_lat, Current_lon, (String)count, (String)explain);
     sprintf(buffer, "目的地との方位差 %lf : 左モータを%lf回転します", Yaw_Error, temp);
   }
   String explain = String(buffer);

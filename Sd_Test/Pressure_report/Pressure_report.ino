@@ -5,7 +5,7 @@
 #include <math.h>
 Adafruit_BME280 bme;
 
-const char* fname = "/pressure_report_baseupd_20260701.csv";
+const char* fname = "/pressure_report_baseupd_20260723.csv";
 File file;
 
 float append_datas[14]; //0~9: 気圧, 10: 傾き, 11: 上昇速度, 12: 判定, 13: number
