@@ -8,7 +8,7 @@
 Ticker bno055ticker;       //タイマー割り込み用のインスタンス
 #define BNO055interval 10  //何ms間隔でデータを取得するか
 
-const char* fname = "/report_20260630_1.csv";
+const char* fname = "/report_20260624.csv";
 File file;
 //Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire); //ICSの名前, デフォルトアドレス, 謎
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -78,6 +78,7 @@ void setup() {
 void loop() {
   // 修正箇所
   static unsigned long lastSensorTime = 0;
+  static unsigned long lastSensorTime = 0;
 
   while (Target_Distance >= 5.0) {
     // ==========================================
@@ -101,15 +102,10 @@ void loop() {
 
         // 完全なGPSデータが受信でき、かつ測位が完了した時だけ中に入る
         if (gps.location.isUpdated() && gps.location.isValid()) {
-          // モーターを直進させる処理
-          digitalWrite(RM_IN1, LOW);
-          digitalWrite(RM_IN2, HIGH);
-          digitalWrite(LM_IN1, LOW);
-          digitalWrite(LM_IN2, HIGH);
-
           count++;
           Current_lat = gps.location.lat();
           Current_lon = gps.location.lng();
+
 
           Serial.println("→ 測位成功:SDカードに書き込みます。");
           Calc_Dist();  // 目的地までの距離と方位を更新
@@ -147,13 +143,16 @@ void SD_Write() {
     return;
   }
   file.print("number,");
+  file.print("number,");
   file.print("latitude,");
   file.print("longitude,");
+  file.println("explain");
   file.println("explain");
   file.close();
   delay(10);
 }
 
+void SD_Append(double lat, double lon, String number, String explain) {
 void SD_Append(double lat, double lon, String number, String explain) {
   char charbuf[15];
   char charbuf2[15];
@@ -167,8 +166,10 @@ void SD_Append(double lat, double lon, String number, String explain) {
     return;
   }
   file.print(number + ",");
+  file.print(number + ",");
   file.print(latstr + ",");
   file.print(lonstr + ",");
+  file.println(explain);
   file.println(explain);
   file.close();
   delay(10);
@@ -207,19 +208,24 @@ bool Mode_Select(double Yaw_Error) {
 
 void Pivot(double Yaw_Error) {
   char buffer[100];
+  char buffer[100];
   if (Yaw_Error <= 10) {
     if (Yaw_Error <= 0) {
       digitalWrite(LM_IN1, HIGH);
       digitalWrite(LM_IN2, LOW);
+      sprintf(buffer, "目的地との方位差 %lf 度 : 右に0.1秒回転します", Yaw_Error);
       sprintf(buffer, "目的地との方位差 %lf 度 : 右に0.1秒回転します", Yaw_Error);
       delay(100);
     } else {
       digitalWrite(RM_IN1, HIGH);
       digitalWrite(RM_IN2, LOW);
       sprintf(buffer, "目的地との方位差 %lf 度 : 左に0.1秒回転します", Yaw_Error);
+      sprintf(buffer, "目的地との方位差 %lf 度 : 左に0.1秒回転します", Yaw_Error);
       delay(100);
     }
   }
+  String explain = String(buffer);
+  SD_Append(Current_lat, Current_lon, (String)count, (String)explain);
   String explain = String(buffer);
   SD_Append(Current_lat, Current_lon, (String)count, (String)explain);
 }
@@ -227,13 +233,20 @@ void Pivot(double Yaw_Error) {
 void Pid(double Yaw_Error) {
   char buffer[100];
   double temp = (60 * Yaw_Error) / 50;
+  char buffer[100];
+  double temp = (60 * Yaw_Error) / 50;
   if (Yaw_Error > 0) {
     analogWrite(RM_IN1, 60 * Yaw_Error);
     analogWrite(RM_IN2, 0);
     sprintf(buffer, "目的地との方位差 %lf : 右モータを%lf回転します", Yaw_Error, temp);
+    sprintf(buffer, "目的地との方位差 %lf : 右モータを%lf回転します", Yaw_Error, temp);
   } else {
     analogWrite(LM_IN1, 60 * Yaw_Error);
     analogWrite(LM_IN2, 0);
+    sprintf(buffer, "目的地との方位差 %lf : 左モータを%lf回転します", Yaw_Error, temp);
+  }
+  String explain = String(buffer);
+  SD_Append(Current_lat, Current_lon, (String)count, (String)explain);
     sprintf(buffer, "目的地との方位差 %lf : 左モータを%lf回転します", Yaw_Error, temp);
   }
   String explain = String(buffer);
