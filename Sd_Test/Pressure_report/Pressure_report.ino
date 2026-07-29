@@ -1,14 +1,22 @@
 #include <Wire.h>
+#include <SD.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <math.h>
 Adafruit_BME280 bme;
 
+const char* fname = "/pressure_report_baseupd_20260701.csv";
+File file;
+
+float append_datas[14]; //0~9: 気圧, 10: 傾き, 11: 上昇速度, 12: 判定, 13: number
+
+int count = 0;
+
 const int data_amount = 10;           // データ取得量
 const int sensor_dist = 50;           // センサの取得間隔[ms]
 const float press2height = -10/1.2;   // 気圧から高度に変換する比率
 
-const float base = 0.5;               // 暫定の比較基準[m/s]
+const float base = 1.0;               // 暫定の比較基準[m/s]
 
 struct Slope{
   float a;      // 近似直線の傾き
@@ -17,18 +25,28 @@ struct Slope{
 
 void setup() {
   Serial.begin(115200);
-  Wire.begin(21, 22); // sda, scl
+
+  Wire.begin(21, 22); // SDA(SDI), SCL(SCK)
   bool status;
   status = bme.begin(0x76);
   while (!status) {
     Serial.println("BME280 sensorが使えません");
     delay(1000);
   }
+
+  if (!SD.begin(5)) {
+    Serial.println("Card Mount failed");
+    return;
+  }
+  SD_Write();
+
 }
 
 void loop() { 
-  int current_trend = get_trend(base);
-  Serial.println(current_trend);
+  append_datas[12] = get_trend(base);
+  append_datas[13] = count;
+  SD_Append(append_datas);
+  count++;
 }
 
 /* 近似直線の傾きと切片を求める */
@@ -59,6 +77,7 @@ int get_trend(float base) {
 
   for (int i=0; i<data_amount; i++) {
     pressures[i] = bme.readPressure() / 100.0F;
+    append_datas[i] = pressures[i];
     mean_p += pressures[i];
 
     Serial.print(pressures[i]);
@@ -127,6 +146,10 @@ int get_trend(float base) {
   Serial.println(slope_fixed.b);
 
   float speed = slope_fixed.a * press2height / (sensor_dist / 1000.0);  // 上昇速度[m/s]を傾きから求める
+  Serial.print("speed: ");
+  Serial.println(speed);
+  append_datas[10] = slope_fixed.a;
+  append_datas[11] = speed;
 
   // 傾きの絶対値と閾値baseの差、傾きの正負の2つを求め、上昇なら1、安定なら0、下降なら-1を返す
   if (abs(speed) < base)  return  0;  // 安定
@@ -139,4 +162,41 @@ void compare(float base) {
   while (1) {
     if (get_trend(base)) break;
   }
+}
+
+/*ファイルに書き込む(書き込みするファイルを指定)*/
+void SD_Write() {
+  file = SD.open(fname, FILE_WRITE);
+  if (!file) {
+    Serial.println("Failed to open file");
+    return;
+  }
+  for(int i=0; i<data_amount; i++){
+    file.printf("p%d,", i);
+  }
+  file.print("slope,");
+  file.print("speed,");
+  file.print("judgement,");
+  file.println("number");
+  file.close();
+  delay(10);
+}
+
+void SD_Append(float datas[14]) {    //0~9: 気圧, 10: 傾き, 11: 上昇速度, 12: 判定, 13: number
+  file = SD.open(fname, FILE_APPEND);
+  if (!file) {
+    Serial.println("Failed to open file");
+    return;
+  }
+
+  for (int i=0; i<13; i++){
+    char charbuf[15];
+    dtostrf(datas[i], 0, 7, charbuf);
+    String str = String(charbuf);
+    file.print(str + ",");
+  }
+
+  file.println(append_datas[13]);
+  file.close();
+  delay(10);
 }
