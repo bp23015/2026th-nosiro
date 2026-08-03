@@ -11,8 +11,8 @@
   「片方H固定+もう片方PWM＝通常動作⇔ショートブレーキ」ではない点に注意）。
 
   必要ライブラリ（Arduino IDEのライブラリマネージャからインストール）：
-    - ESPAsyncWebServer (lacamera 版 または me-no-dev 版)
-    - AsyncTCP (ESP32用)
+    - ESPAsyncWebServer (ESP32Async 版)
+    - AsyncTCP (ESP32Async 版)
     - ArduinoJson (v7系)
 */
 
@@ -22,7 +22,7 @@
 
 // アクセスポイントの設定（ssidとpwは自由に決めていい）
 const char* ssid = "ESP32_MotorTest";
-const char* password = "raspberry";
+const char* password = "esp32wroom";
 
 // モーターのIN1/IN2ピン（merge_v1.inoと同じ配線）
 const int RM_IN1 = 13;  // 右モーター
