@@ -15,7 +15,7 @@ double target_lng = 139.653681;
 void setup() {
   Serial.begin(115200);
   // LiDARが16,17を使うなら、GPSは27(RX), 26(TX)などに設定
-  MyGPS.begin(9600, SERIAL_8N1, 26, 27);
+  MyGPS.begin(9600, SERIAL_8N1, 27, 26);
 
   Serial.println("GPS Test Start...");
   while(!SD.begin(5)) {
