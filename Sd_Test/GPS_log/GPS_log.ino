@@ -15,7 +15,7 @@ double target_lng = 139.653681;
 void setup() {
   Serial.begin(115200);
   // LiDARが16,17を使うなら、GPSは27(RX), 26(TX)などに設定
-  MyGPS.begin(9600, SERIAL_8N1, 26, 27);
+  MyGPS.begin(9600, SERIAL_8N1, 27, 26);
 
   Serial.println("GPS Test Start...");
   while(!SD.begin(5)) {
@@ -36,12 +36,16 @@ void loop() {
   while (MyGPS.available() > 0) {
     if (gps.encode(MyGPS.read())) {
       displayInfo();
+      delay(1000);
     }
   }
 
   // 10秒経っても何も受信しない場合は配線ミスを疑う
   if (millis() > 5000 && gps.charsProcessed() < 10) {
-    Serial.println("GPSモジュールが見つかりません。配線を確認してください。");
+    // Serial.println("GPSモジュールが見つかりません。配線を確認してください。");
+    file = SD.open(fname, FILE_APPEND);
+    file.println("配線×");
+    file.close();
     delay(5000);
   }
 }
@@ -57,15 +61,15 @@ void displayInfo() {
     // Serial.print("Dist: "); Serial.println(current_lat,6);
     // Serial.print("Target Course: "); Serial.println(current_lng,6);
 
-    Serial.print("Dist: ");
-    Serial.print(distance);
-    Serial.println("m ");
-    Serial.print("Target Course: ");
-    Serial.print(course);
-    Serial.println(" deg");
+    // Serial.print("Dist: ");
+    // Serial.print(distance);
+    // Serial.println("m ");
+    // Serial.print("Target Course: ");
+    // Serial.print(course);
+    // Serial.println(" deg");
     file = SD.open(fname, FILE_APPEND);
     if (!file) {
-      Serial.println("Failed to open file");
+      // Serial.println("Failed to open file");
       return;
     }
     file.print("目的地までの距離；");
