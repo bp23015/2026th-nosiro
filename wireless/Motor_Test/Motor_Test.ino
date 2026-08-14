@@ -21,7 +21,7 @@
 #include <ArduinoJson.h>
 
 // アクセスポイントの設定（ssidとpwは自由に決めていい）
-const char* ssid = "ESP32_MotorTest2";
+const char* ssid = "ESP32_MotorTest";
 const char* password = "esp32wroom";
 
 // モーターのIN1/IN2ピン（merge_v1.inoと同じ配線）
