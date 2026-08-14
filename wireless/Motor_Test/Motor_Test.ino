@@ -246,6 +246,18 @@ void apply_motor_state(int motor) {
   }
 }
 
+// 両モーターを停止し、方向・速度も初期値（Forward・フル速度）に戻す。
+// HTML側の初期表示（Forwardボタン active・スライダー255）と状態を一致させ、
+// 前回接続時のon/off・方向・速度が新しい接続に持ち越されないようにする
+void reset_motors() {
+  for (int motor = 1; motor <= 2; motor++) {
+    motor_on[motor] = false;
+    motor_dir[motor] = 0;
+    max_speed[motor] = 255;
+    apply_motor_state(motor);
+  }
+}
+
 // ブラウザから受け取ったJSONコマンドを実行する
 void handle_command(JsonDocument& doc) {
   int motor = doc["motor"] | 0;
@@ -276,13 +288,12 @@ void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
                AwsEventType type, void* arg, uint8_t* data, size_t len) {
   if (type == WS_EVT_CONNECT) {
     Serial.printf("WS client #%u connected\n", client->id());
+    // 新しい接続が確立した時点で、前回接続時の状態を持ち越さないようリセットする
+    reset_motors();
   } else if (type == WS_EVT_DISCONNECT) {
     Serial.printf("WS client #%u disconnected\n", client->id());
-    // 接続が切れたら安全のため両モーターを停止する
-    for (int motor = 1; motor <= 2; motor++) {
-      motor_on[motor] = false;
-      apply_motor_state(motor);
-    }
+    // 接続が切れた場合も安全のため両モーターを停止する
+    reset_motors();
   } else if (type == WS_EVT_DATA) {
     AwsFrameInfo* info = (AwsFrameInfo*)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
